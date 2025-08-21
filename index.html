@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sic Bo – HTML Implementation</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #121a2b;
+        --accent: #00d1b2;
+        --accent-2: #ffd166;
+        --lose: #e76f51;
+        --win: #2a9d8f;
+        --text: #e8f0ff;
+        --muted: #98a2b3;
+        --chip: #2d3a5a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+        background: radial-gradient(1200px 800px at 50% -10%, #142043, var(--bg));
+        color: var(--text);
+      }
+      .container {
+        max-width: 1000px;
+        margin: 24px auto;
+        padding: 16px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .title { font-weight: 700; letter-spacing: 0.3px; }
+      .balance {
+        background: var(--panel);
+        padding: 10px 14px;
+        border-radius: 10px;
+        box-shadow: inset 0 0 0 1px #1f2a44;
+      }
+      .controls {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .chip {
+        background: var(--chip);
+        border: 2px solid #3a4b76;
+        color: var(--text);
+        padding: 8px 12px;
+        border-radius: 999px;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease;
+      }
+      .chip:hover { transform: translateY(-2px); }
+      .chip.active {
+        background: var(--accent);
+        border-color: #00b49a;
+        color: #04251f;
+        font-weight: 700;
+      }
+      .table {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(4, 1fr);
+        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.04));
+        padding: 12px;
+        border-radius: 12px;
+        box-shadow: inset 0 0 0 1px #1f2a44;
+      }
+      .bet {
+        background: var(--panel);
+        border: 1px solid #1f2a44;
+        border-radius: 10px;
+        padding: 12px;
+        cursor: pointer;
+        position: relative;
+        min-height: 88px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        transition: transform 0.05s ease, border-color 0.2s ease, background 0.2s ease;
+      }
+      .bet:hover { transform: translateY(-1px); border-color: #2e3e66; }
+      .bet .label { font-weight: 700; }
+      .bet .payout { color: var(--muted); font-size: 12px; }
+      .bet .amount {
+        position: absolute; right: 8px; bottom: 8px;
+        background: #203054; border: 1px solid #2d4375; color: #cfe3ff;
+        padding: 2px 8px; border-radius: 999px; font-size: 12px;
+      }
+      .bet.number { background: #16213a; }
+
+      .actions {
+        display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap;
+      }
+      button.primary, button.secondary {
+        padding: 10px 14px; border-radius: 10px; cursor: pointer; border: none; font-weight: 700;
+      }
+      button.primary { background: var(--accent); color: #031b18; }
+      button.secondary { background: #1a2747; color: #d9e6ff; border: 1px solid #2b3c67; }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+      .dice {
+        display: flex; gap: 12px; align-items: center; justify-content: center; font-size: 48px; margin: 16px 0 6px;
+      }
+      .die { display: inline-block; transition: transform 120ms ease; }
+      .dice.rolling { animation: rollShake 600ms linear infinite; }
+      @keyframes rollShake {
+        0% { transform: translate(0,0) rotate(0deg); }
+        25% { transform: translate(2px,-2px) rotate(5deg); }
+        50% { transform: translate(-2px,1px) rotate(-4deg); }
+        75% { transform: translate(2px,2px) rotate(3deg); }
+        100% { transform: translate(0,0) rotate(0deg); }
+      }
+      .result { text-align: center; color: var(--muted); margin-bottom: 8px; }
+      .breakdown { background: #11192c; border: 1px solid #1f2a44; border-radius: 10px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; max-height: 160px; overflow: auto; }
+
+      .bad { color: var(--lose); }
+      .good { color: var(--win); }
+
+      @media (max-width: 720px) {
+        .table { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="title">Sic Bo</div>
+        <div class="balance">Balance: $<span id="balance">1000</span></div>
+      </header>
+
+      <div class="controls">
+        <div>Chip:</div>
+        <div class="chips" id="chips"></div>
+        <button class="secondary" id="refund">Clear Bets</button>
+        <button class="secondary" id="reset">New Game</button>
+      </div>
+
+      <div class="table" id="table">
+        <!-- Big / Small / Any Triple -->
+        <div class="bet" data-bet="big">
+          <div class="label">Big 11–17</div>
+          <div class="payout">Pays 1:1 (no triples)</div>
+          <div class="amount" hidden>$0</div>
+        </div>
+        <div class="bet" data-bet="small">
+          <div class="label">Small 4–10</div>
+          <div class="payout">Pays 1:1 (no triples)</div>
+          <div class="amount" hidden>$0</div>
+        </div>
+        <div class="bet" data-bet="anyTriple">
+          <div class="label">Any Triple</div>
+          <div class="payout">Pays 30:1</div>
+          <div class="amount" hidden>$0</div>
+        </div>
+        <div class="bet" data-bet="sum">
+          <div class="label">Sum</div>
+          <div class="payout">Info: Sum shown after roll</div>
+          <div class="amount" hidden>$0</div>
+        </div>
+
+        <!-- Single number bets 1-6 -->
+        <div class="bet number" data-bet="single-1">
+          <div class="label">Number 1</div>
+          <div class="payout">Pays 1/2/3:1 (1/2/3 hits)</div>
+          <div class="amount" hidden>$0</div>
+        </div>
+        <div class="bet number" data-bet="single-2">
+          <div class="label">Number 2</div>
+          <div class="payout">Pays 1/2/3:1</div>
+          <div class="amount" hidden>$0</div>
+        </div>
+        <div class="bet number" data-bet="single-3">
+          <div class="label">Number 3</div>
+          <div class="payout">Pays 1/2/3:1</div>
+          <div class="amount" hidden>$0</div>
+        </div>
+        <div class="bet number" data-bet="single-4">
+          <div class="label">Number 4</div>
+          <div class="payout">Pays 1/2/3:1</div>
+          <div class="amount" hidden>$0</div>
+        </div>
+        <div class="bet number" data-bet="single-5">
+          <div class="label">Number 5</div>
+          <div class="payout">Pays 1/2/3:1</div>
+          <div class="amount" hidden>$0</div>
+        </div>
+        <div class="bet number" data-bet="single-6">
+          <div class="label">Number 6</div>
+          <div class="payout">Pays 1/2/3:1</div>
+          <div class="amount" hidden>$0</div>
+        </div>
+      </div>
+
+      <div class="dice" id="dice"><span class="die">⚀</span> <span class="die">⚁</span> <span class="die">⚂</span></div>
+      <div class="result" id="result">Place your bets and roll the dice.</div>
+
+      <div class="actions">
+        <button class="primary" id="roll">Roll Dice</button>
+      </div>
+
+      <div class="breakdown" id="log" aria-live="polite"></div>
+    </div>
+
+    <script>
+      // Simple Sic Bo implementation. Bets deduct from balance when placed.
+      // On win, returns include stake + winnings (e.g., 1:1 => 2x return).
+
+      const $ = (sel, el=document) => el.querySelector(sel);
+      const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+      const state = {
+        balance: 1000,
+        chip: 10,
+        bets: new Map(), // key -> amount
+      };
+
+      const DICE_UNICODE = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+      const balanceEl = $('#balance');
+      const chipsEl = $('#chips');
+      const tableEl = $('#table');
+      const diceEl = $('#dice');
+      const rollBtn = $('#roll');
+      const resultEl = $('#result');
+      const logEl = $('#log');
+
+      function fmt(n) { return Number(n).toLocaleString(undefined, {maximumFractionDigits:0}); }
+
+      function renderBalance() { balanceEl.textContent = fmt(state.balance); }
+
+      function addLog(lines) {
+        const now = new Date().toLocaleTimeString();
+        const out = Array.isArray(lines) ? lines.join('\n') : String(lines || '');
+        logEl.textContent = `[${now}]\n${out}\n\n` + logEl.textContent;
+      }
+
+      function setupChips() {
+        const values = [1,5,10,25,50,100];
+        chipsEl.innerHTML = '';
+        values.forEach(v => {
+          const b = document.createElement('button');
+          b.className = 'chip' + (v === state.chip ? ' active' : '');
+          b.textContent = `$${v}`;
+          b.dataset.value = String(v);
+          b.addEventListener('click', () => {
+            state.chip = v;
+            $$('.chip', chipsEl).forEach(el => el.classList.toggle('active', el === b));
+          });
+          chipsEl.appendChild(b);
+        });
+      }
+
+      function updateBetBadge(cell, amount) {
+        const tag = $('.amount', cell);
+        if (!tag) return;
+        if (amount > 0) {
+          tag.textContent = `$${fmt(amount)}`;
+          tag.hidden = false;
+        } else {
+          tag.hidden = true;
+        }
+      }
+
+      function placeBet(key, cell) {
+        const amt = state.chip;
+        if (state.balance < amt) {
+          resultEl.innerHTML = `<span class="bad">Insufficient balance for $${fmt(amt)} chip.</span>`;
+          return;
+        }
+        state.balance -= amt;
+        const cur = state.bets.get(key) || 0;
+        const next = cur + amt;
+        state.bets.set(key, next);
+        updateBetBadge(cell, next);
+        renderBalance();
+      }
+
+      function refundBets() {
+        let refunded = 0;
+        state.bets.forEach(v => refunded += v);
+        if (refunded > 0) {
+          state.balance += refunded;
+          renderBalance();
+          addLog([`Refunded $${fmt(refunded)} in bets.`]);
+        }
+        state.bets.clear();
+        $$('.bet', tableEl).forEach(cell => updateBetBadge(cell, 0));
+        resultEl.textContent = 'Bets cleared.';
+      }
+
+      function rollDie() { return Math.floor(Math.random() * 6) + 1; }
+
+      function evaluate(d1, d2, d3) {
+        const sum = d1 + d2 + d3;
+        const isTriple = (d1 === d2 && d2 === d3);
+        const counts = [0,0,0,0,0,0,0];
+        counts[d1]++; counts[d2]++; counts[d3]++;
+
+        let returns = 0; // total returned to balance
+        const detail = [];
+
+        state.bets.forEach((betAmt, key) => {
+          let ret = 0; // total return for this bet (includes stake if win)
+          if (key === 'big') {
+            const win = !isTriple && sum >= 11 && sum <= 17;
+            if (win) ret = betAmt * 2; // 1:1 payout + stake
+          } else if (key === 'small') {
+            const win = !isTriple && sum >= 4 && sum <= 10;
+            if (win) ret = betAmt * 2;
+          } else if (key === 'anyTriple') {
+            if (isTriple) ret = betAmt * 31; // 30:1 + stake
+          } else if (key.startsWith('single-')) {
+            const n = Number(key.split('-')[1]);
+            const hit = counts[n];
+            if (hit > 0) ret = betAmt * (1 + hit); // 1/2/3 : 1 + stake
+          }
+
+          if (ret > 0) {
+            returns += ret;
+            const profit = ret - betAmt;
+            detail.push(`WIN ${key}: +$${fmt(profit)} (return $${fmt(ret)})`);
+          } else {
+            detail.push(`LOSE ${key}: -$${fmt(betAmt)}`);
+          }
+        });
+
+        state.balance += returns;
+        renderBalance();
+
+        // Clear all bets after resolution
+        state.bets.clear();
+        $$('.bet', tableEl).forEach(cell => updateBetBadge(cell, 0));
+
+        const sumInfo = `Dice ${d1}, ${d2}, ${d3} (sum ${sum})${isTriple ? ' — TRIPLE!' : ''}`;
+        const net = returns; // stakes already deducted on placement
+        const netChange = net - 0; // net shown in lines already, keep summary short
+        const won = detail.some(line => line.startsWith('WIN'));
+        resultEl.innerHTML = won ? `<span class="good">${sumInfo}</span>` : `<span class="bad">${sumInfo}</span>`;
+        addLog([sumInfo, ...detail]);
+      }
+
+      function renderDice(d1, d2, d3) {
+        diceEl.innerHTML = `<span class="die">${DICE_UNICODE[d1-1]}</span> <span class="die">${DICE_UNICODE[d2-1]}</span> <span class="die">${DICE_UNICODE[d3-1]}</span>`;
+      }
+
+      function animateRollThenResolve() {
+        diceEl.classList.add('rolling');
+        rollBtn.disabled = true;
+        const interval = setInterval(() => {
+          const r1 = rollDie();
+          const r2 = rollDie();
+          const r3 = rollDie();
+          renderDice(r1, r2, r3);
+        }, 80);
+
+        const duration = 1000 + Math.floor(Math.random() * 600);
+        setTimeout(() => {
+          clearInterval(interval);
+          const d1 = rollDie();
+          const d2 = rollDie();
+          const d3 = rollDie();
+          renderDice(d1, d2, d3);
+          diceEl.classList.remove('rolling');
+          evaluate(d1, d2, d3);
+          rollBtn.disabled = false;
+        }, duration);
+      }
+
+      function handleRoll() {
+        if (state.bets.size === 0) {
+          resultEl.innerHTML = '<span class="bad">Place at least one bet.</span>';
+          return;
+        }
+        animateRollThenResolve();
+      }
+
+      function bindTable() {
+        $$('.bet', tableEl).forEach(cell => {
+          const key = cell.dataset.bet;
+          cell.addEventListener('click', () => placeBet(key, cell));
+        });
+      }
+
+      function resetGame() {
+        refundBets();
+        state.balance = 1000;
+        renderBalance();
+        logEl.textContent = '';
+        resultEl.textContent = 'New game. Place your bets.';
+        renderDice(1,2,3);
+      }
+
+      // Init
+      (function init() {
+        renderBalance();
+        setupChips();
+        bindTable();
+        renderDice(1,2,3);
+        rollBtn.addEventListener('click', handleRoll);
+        $('#refund').addEventListener('click', refundBets);
+        $('#reset').addEventListener('click', resetGame);
+      })();
+    </script>
+  </body>
+</html>
