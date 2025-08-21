@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>ไฮโล (Hi Lo) – Grid Prototype</title>
+        <style>
+            :root { --line: #000; --text: #000; --accent-red: #c21807; }
+            html, body { height: 100%; }
+            body {
+                margin: 0;
+                background: #fff;
+                color: var(--text);
+                font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Thai", sans-serif;
+            }
+            .wrap { max-width: 960px; margin: 20px auto; padding: 12px; }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
+                /* rows auto-size; cells enforce squares via aspect-ratio */
+                grid-auto-rows: 1fr;
+                gap: 0; /* internal lines drawn via borders */
+                user-select: none;
+            }
+            .cell {
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 4px;
+                cursor: pointer;
+                background: #fff;
+                /* perfect squares */
+                aspect-ratio: 1 / 1;
+            }
+            /* Internal grid lines only: top border for rows > 1, left border for cols > 1 */
+            .cell[data-row]:not([data-row="0"]) { border-top: 1px solid var(--line); }
+            .cell[data-col]:not([data-col="0"]) { border-left: 1px solid var(--line); }
+            /* Remove separator between (2,0) and (3,0): remove left border of (row 0, col 3) */
+            .cell[data-row="0"][data-col="3"] { border-left: none !important; }
+
+            .content { display: inline-flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+            .token { font-size: 20px; line-height: 1; color: var(--text); }
+            .token.red { color: var(--accent-red); font-weight: 700; }
+            .thai { font-size: 18px; }
+
+            /* Dice face (SVG) wrapper sizing */
+            .die { width: 90%; height: 90%; display: inline-block; }
+            .die svg { width: 100%; height: 100%; display: block; }
+        </style>
+        <script>
+            // Data: 4 rows x 6 cols
+            const bets = [
+                ["1 5", "5 ต่ำ", "11", "ไฮโล", "6 ต่ำ", "6 2"],
+                ["1 6", "_1", "ต่ำ", "สูง", "_6", "6 1"],
+                ["2 5", "_2", "_3", "_4", "_5", "5 2"],
+                ["1 2 3", "3 6", "2 4", "3 5", "4 1", "4 5 6"],
+            ];
+
+            function cellClick(row, col) {
+                // For prototype: log coordinates and label
+                const label = bets[row][col];
+                console.log("cellClick", { row, col, label });
+            }
+
+            function createDieSVG(value, color = "#000") {
+                // Use a 3x3 grid with equal margins: left/top=6, center=18, right/bottom=30
+                const L = 6, C = 18, R = 30, T = 6, M = 18, B = 30;
+                const p = ({
+                    1: [[C, M]],
+                    2: [[L, T], [R, B]],
+                    3: [[L, T], [C, M], [R, B]],
+                    4: [[L, T], [L, B], [R, T], [R, B]],
+                    5: [[L, T], [L, B], [R, T], [R, B], [C, M]],
+                    6: [[L, T], [L, M], [L, B], [R, T], [R, M], [R, B]],
+                })[value] || [];
+                const r = 5; // slightly bigger pips
+                const circles = p
+                    .map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" />`)
+                    .join("");
+                return `
+                    <span class="die" aria-label="die-${value}">
+                        <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+                            ${circles}
+                        </svg>
+                    </span>
+                `;
+            }
+
+            function renderToken(token) {
+                // Underscore => dice face
+                if (/^_([1-6])$/.test(token)) {
+                    const n = Number(token.slice(1));
+                    const pipColor = (n === 1 || n === 4) ? "#c21807" : "#000";
+                    return createDieSVG(n, pipColor);
+                }
+                // Thai text or numbers separated by space
+                if (token === "ต่ำ" || token === "สูง" || token === "ไฮโล") {
+                    const cls = token === "ไฮโล" ? "token thai red" : "token thai";
+                    return `<span class="${cls}">${token}</span>`;
+                }
+                // Pure number (e.g., "11")
+                if (/^\d+$/.test(token)) {
+                    const isRed = token === "11" || token === "1" || token === "4";
+                    return `<span class="token${isRed ? " red" : ""}">${token}</span>`;
+                }
+                // Fallback
+                return `<span class="token">${token}</span>`;
+            }
+
+            function renderCellLabel(label) {
+                // Split labels by spaces, render each piece; 1 and 4 in red
+                // Example: "1 5" => ["1", "5"]
+                const parts = label.split(/\s+/).filter(Boolean);
+                const html = parts
+                    .map((part) => {
+                        if (/^_([1-6])$/.test(part)) {
+                            const n = Number(part.slice(1));
+                            const pipColor = (n === 1 || n === 4) ? "#c21807" : "#000";
+                            return createDieSVG(n, pipColor);
+                        }
+                        if (part === "ต่ำ" || part === "สูง" || part === "ไฮโล") {
+                            const cls = part === "ไฮโล" ? "token thai red" : "token thai";
+                            return `<span class="${cls}">${part}</span>`;
+                        }
+                        if (/^\d+$/.test(part)) {
+                            const isRed = part === "11" || part === "1" || part === "4";
+                            return `<span class="token${isRed ? " red" : ""}">${part}</span>`;
+                        }
+                        return renderToken(part);
+                    })
+                    .join(" ");
+                return `<div class="content">${html}</div>`;
+            }
+
+            function bootstrap() {
+                const grid = document.getElementById("grid");
+                bets.forEach((row, r) => {
+                    row.forEach((label, c) => {
+                        const cell = document.createElement("div");
+                        cell.className = "cell";
+                        cell.dataset.row = String(r);
+                        cell.dataset.col = String(c);
+                        cell.innerHTML = renderCellLabel(label);
+                        cell.addEventListener("click", () => cellClick(r, c));
+                        grid.appendChild(cell);
+                    });
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", bootstrap);
+        </script>
+    </head>
+    <body>
+        <div class="wrap">
+            <h2 style="margin: 0 0 12px 0; font-weight: 700;">ไฮโล (Hi Lo) – 6×4 Grid Prototype</h2>
+            <div id="grid" class="grid" role="grid" aria-label="Hi Lo betting grid"></div>
+            <p style="margin-top: 12px; font-size: 14px; color: #333;">
+                Notes: internal lines only (no outer border). Click any cell to log its coordinates.
+                Dice faces for _1–_6 use red pips for 1 and 4.
+            </p>
+        </div>
+    </body>
+    </html>
