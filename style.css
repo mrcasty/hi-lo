@@ -1,36 +1,192 @@
 /* Game-specific styles leveraging Pico.css base */
-.container { max-width: 1000px; margin: 24px auto; padding: 16px; }
-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
-.controls { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
-.chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.chip { border-radius: 999px; padding: 0.4rem 0.7rem; cursor: pointer; user-select: none; }
-.chip.active { outline: 2px solid currentColor; font-weight: 600; }
-.table { display: grid; gap: 0.75rem; grid-template-columns: repeat(4, 1fr); }
-.bet { position: relative; min-height: 88px; border: 1px solid rgba(0,0,0,.2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: transform .05s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease; }
-.bet:hover { transform: translateY(-1px); }
+.container {
+    max-width: 1000px;
+    margin: 24px auto;
+    padding: 16px;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.controls {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.chips {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.chip {
+    border-radius: 999px;
+    padding: 0.4rem 0.7rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.chip.active {
+    outline: 2px solid currentColor;
+    font-weight: 600;
+}
+
+.table {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.bet {
+    position: relative;
+    min-height: 88px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition:
+        transform 0.05s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.bet:hover {
+    transform: translateY(-1px);
+}
 @media (prefers-color-scheme: dark) {
-  .bet { background: #0f1a33; border-color: #223055; box-shadow: 0 1px 0 rgba(0,0,0,.45); }
-  .bet.number { background: #0c162b; }
-  .bet:hover { border-color: #3e63dd; box-shadow: 0 2px 6px rgba(0,0,0,.45); }
-  .bet .amount { background: rgba(255,255,255,.08); }
+    .bet {
+        background: #0f1a33;
+        border-color: #223055;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+    }
+    .bet.number {
+        background: #0c162b;
+    }
+    .bet:hover {
+        border-color: #3e63dd;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+    }
+    .bet .amount {
+        background: rgba(255, 255, 255, 0.08);
+    }
 }
 @media (prefers-color-scheme: light) {
-  .bet { background: #ffffff; border-color: #d6dde9; box-shadow: 0 1px 2px rgba(16,24,40,.06); }
-  .bet.number { background: #f9fbff; }
-  .bet:hover { border-color: #7aa2ff; box-shadow: 0 2px 6px rgba(16,24,40,.10); }
-  .bet .amount { background: rgba(0,0,0,.06); }
+    .bet {
+        background: #ffffff;
+        border-color: #d6dde9;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+    .bet.number {
+        background: #f9fbff;
+    }
+    .bet:hover {
+        border-color: #7aa2ff;
+        box-shadow: 0 2px 6px rgba(16, 24, 40, 0.1);
+    }
+    .bet .amount {
+        background: rgba(0, 0, 0, 0.06);
+    }
 }
-.bet .label { font-weight: 700; }
-.bet .payout { opacity: 0.7; font-size: 0.85rem; }
-.bet .amount { position: absolute; right: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: rgba(0,0,0,0.08); }
-.actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
-.dice { display: flex; gap: 12px; align-items: center; justify-content: center; font-size: 48px; margin: 16px 0 6px; }
-.die { display: inline-block; transition: transform 120ms ease; }
-.dice.rolling { animation: rollShake 600ms linear infinite; }
-@keyframes rollShake { 0% { transform: translate(0,0) rotate(0deg);} 25% { transform: translate(2px,-2px) rotate(5deg);} 50% { transform: translate(-2px,1px) rotate(-4deg);} 75% { transform: translate(2px,2px) rotate(3deg);} 100% { transform: translate(0,0) rotate(0deg);} }
-.result { text-align: center; opacity: 0.8; margin-bottom: 8px; }
-.breakdown { border: 1px solid rgba(0,0,0,.12); border-radius: 10px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; max-height: 180px; overflow: auto; }
-.bad { color: #b00020; }
-.good { color: #0f7b6c; }
-@media (max-width: 720px) { .table { grid-template-columns: repeat(2, 1fr); } }
+.bet .label {
+    font-weight: 700;
+}
 
+.bet .payout {
+    opacity: 0.7;
+    font-size: 0.85rem;
+}
+
+.bet .amount {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.dice {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    margin: 16px 0 6px;
+}
+
+.die {
+    display: inline-block;
+    transition: transform 120ms ease;
+}
+
+.dice.rolling {
+    animation: rollShake 600ms linear infinite;
+}
+
+@keyframes rollShake {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        transform: translate(2px, -2px) rotate(5deg);
+    }
+    50% {
+        transform: translate(-2px, 1px) rotate(-4deg);
+    }
+    75% {
+        transform: translate(2px, 2px) rotate(3deg);
+    }
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+}
+
+.result {
+    text-align: center;
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+.breakdown {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    padding: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    max-height: 180px;
+    overflow: auto;
+}
+
+.bad {
+    color: #b00020;
+}
+
+.good {
+    color: #0f7b6c;
+}
+
+@media (max-width: 720px) {
+    .table {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
