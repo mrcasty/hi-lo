@@ -64,10 +64,47 @@
                 ["1 2 3", "3 6", "2 4", "3 5", "4 1", "4 5 6"],
             ];
 
+            // Bet rules per cell (same shape as bets). Using confirmed interpretations.
+            const rules = [
+                [
+                    { type: 'pair', nums: [1, 5] },
+                    { type: 'sum', value: 5 },
+                    { type: 'sum', value: 11 }, // same rule for both (2,0) and (3,0)
+                    { type: 'sum', value: 11 },
+                    { type: 'sum', value: 6 },
+                    { type: 'pair', nums: [6, 2] },
+                ],
+                [
+                    { type: 'pair', nums: [1, 6] },
+                    { type: 'single', num: 1 },
+                    { type: 'low' },
+                    { type: 'high' },
+                    { type: 'single', num: 6 },
+                    { type: 'pair', nums: [6, 1] },
+                ],
+                [
+                    { type: 'pair', nums: [2, 5] },
+                    { type: 'single', num: 2 },
+                    { type: 'single', num: 3 },
+                    { type: 'single', num: 4 },
+                    { type: 'single', num: 5 },
+                    { type: 'pair', nums: [5, 2] },
+                ],
+                [
+                    { type: 'combo3', nums: [1, 2, 3] },
+                    { type: 'pair', nums: [3, 6] },
+                    { type: 'pair', nums: [2, 4] },
+                    { type: 'pair', nums: [3, 5] },
+                    { type: 'pair', nums: [4, 1] },
+                    { type: 'combo3', nums: [4, 5, 6] },
+                ],
+            ];
+
             function cellClick(row, col) {
-                // For prototype: log coordinates and label
+                // For prototype: log coordinates, label, and rule object
                 const label = bets[row][col];
-                console.log("cellClick", { row, col, label });
+                const rule = rules[row]?.[col] ?? null;
+                console.log("cellClick", { row, col, label, rule });
             }
 
             function createDieSVG(value, color = "#000") {
