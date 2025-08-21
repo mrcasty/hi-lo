@@ -3,7 +3,7 @@
     if (!window.HiLo) return;
     const { bets, rules, roll, evaluateSelected, computeReturn } = window.HiLo;
 
-    function createDieSVG(value, color = "#000") {
+    function createDieSVG(value, color = "#000", withBorder = false) {
         const L = 6, C = 18, R = 30, T = 6, M = 18, B = 30;
         const p = ({
             1: [[C, M]],
@@ -17,10 +17,11 @@
         const circles = p
             .map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" />`)
             .join("");
+        const rect = withBorder ? `<rect x="0.5" y="0.5" width="35" height="35" rx="6" ry="6" fill="#fff" stroke="#000" />` : "";
         return `
             <span class="die" aria-label="die-${value}">
-                <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
-                    ${circles}
+                <svg viewBox="0 0 36 36" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+                    ${rect}${circles}
                 </svg>
             </span>
         `;
@@ -145,10 +146,10 @@
         }
         setupChips();
         refundBtn.addEventListener('click', refundAll);
-        resetBtn.addEventListener('click', () => { refundAll(); balance = 1000; updateBalance(); rolled.innerHTML=''; status.textContent='Add bets and roll.'; });
+        resetBtn.addEventListener('click', () => { refundAll(); balance = 1000; updateBalance(); renderRolled(1,2,3); status.textContent='Add bets and roll.'; });
 
         function renderRolled(d1, d2, d3) {
-            const pip = (n) => createDieSVG(n, (n === 1 || n === 4) ? '#c21807' : '#000');
+            const pip = (n) => createDieSVG(n, (n === 1 || n === 4) ? '#c21807' : '#000', true);
             rolled.innerHTML = `${pip(d1)}${pip(d2)}${pip(d3)}`;
         }
 
@@ -200,6 +201,8 @@
             }, duration);
         }
 
+        // show dice initially
+        renderRolled(1,2,3);
         rollBtn.addEventListener('click', doRoll);
     }
 
