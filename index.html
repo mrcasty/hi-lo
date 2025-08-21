@@ -4,136 +4,43 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sic Bo – HTML Implementation</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2.*/css/pico.min.css">
     <style>
-      :root {
-        --bg: #0b1220;
-        --panel: #121a2b;
-        --accent: #00d1b2;
-        --accent-2: #ffd166;
-        --lose: #e76f51;
-        --win: #2a9d8f;
-        --text: #e8f0ff;
-        --muted: #98a2b3;
-        --chip: #2d3a5a;
+      /* Simplified styles leveraging Pico.css defaults */
+      .container { max-width: 1000px; margin: 24px auto; padding: 16px; }
+      header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+      .controls { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+      .chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+      .chip { border-radius: 999px; padding: 0.4rem 0.7rem; cursor: pointer; user-select: none; }
+      .chip.active { outline: 2px solid currentColor; font-weight: 600; }
+      .table { display: grid; gap: 0.75rem; grid-template-columns: repeat(4, 1fr); }
+      .bet { position: relative; min-height: 88px; border: 1px solid rgba(0,0,0,.2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: transform .05s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+      .bet:hover { transform: translateY(-1px); }
+      @media (prefers-color-scheme: dark) {
+        .bet { background: #0f1a33; border-color: #223055; box-shadow: 0 1px 0 rgba(0,0,0,.45); }
+        .bet.number { background: #0c162b; }
+        .bet:hover { border-color: #3e63dd; box-shadow: 0 2px 6px rgba(0,0,0,.45); }
+        .bet .amount { background: rgba(255,255,255,.08); }
       }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-        background: radial-gradient(1200px 800px at 50% -10%, #142043, var(--bg));
-        color: var(--text);
+      @media (prefers-color-scheme: light) {
+        .bet { background: #ffffff; border-color: #d6dde9; box-shadow: 0 1px 2px rgba(16,24,40,.06); }
+        .bet.number { background: #f9fbff; }
+        .bet:hover { border-color: #7aa2ff; box-shadow: 0 2px 6px rgba(16,24,40,.10); }
+        .bet .amount { background: rgba(0,0,0,.06); }
       }
-      .container {
-        max-width: 1000px;
-        margin: 24px auto;
-        padding: 16px;
-      }
-      header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 16px;
-      }
-      .title { font-weight: 700; letter-spacing: 0.3px; }
-      .balance {
-        background: var(--panel);
-        padding: 10px 14px;
-        border-radius: 10px;
-        box-shadow: inset 0 0 0 1px #1f2a44;
-      }
-      .controls {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-bottom: 16px;
-      }
-      .chips {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .chip {
-        background: var(--chip);
-        border: 2px solid #3a4b76;
-        color: var(--text);
-        padding: 8px 12px;
-        border-radius: 999px;
-        cursor: pointer;
-        user-select: none;
-        transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease;
-      }
-      .chip:hover { transform: translateY(-2px); }
-      .chip.active {
-        background: var(--accent);
-        border-color: #00b49a;
-        color: #04251f;
-        font-weight: 700;
-      }
-      .table {
-        display: grid;
-        gap: 10px;
-        grid-template-columns: repeat(4, 1fr);
-        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.04));
-        padding: 12px;
-        border-radius: 12px;
-        box-shadow: inset 0 0 0 1px #1f2a44;
-      }
-      .bet {
-        background: var(--panel);
-        border: 1px solid #1f2a44;
-        border-radius: 10px;
-        padding: 12px;
-        cursor: pointer;
-        position: relative;
-        min-height: 88px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        transition: transform 0.05s ease, border-color 0.2s ease, background 0.2s ease;
-      }
-      .bet:hover { transform: translateY(-1px); border-color: #2e3e66; }
       .bet .label { font-weight: 700; }
-      .bet .payout { color: var(--muted); font-size: 12px; }
-      .bet .amount {
-        position: absolute; right: 8px; bottom: 8px;
-        background: #203054; border: 1px solid #2d4375; color: #cfe3ff;
-        padding: 2px 8px; border-radius: 999px; font-size: 12px;
-      }
-      .bet.number { background: #16213a; }
-
-      .actions {
-        display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap;
-      }
-      button.primary, button.secondary {
-        padding: 10px 14px; border-radius: 10px; cursor: pointer; border: none; font-weight: 700;
-      }
-      button.primary { background: var(--accent); color: #031b18; }
-      button.secondary { background: #1a2747; color: #d9e6ff; border: 1px solid #2b3c67; }
-      button:disabled { opacity: 0.6; cursor: not-allowed; }
-
-      .dice {
-        display: flex; gap: 12px; align-items: center; justify-content: center; font-size: 48px; margin: 16px 0 6px;
-      }
+      .bet .payout { opacity: 0.7; font-size: 0.85rem; }
+      .bet .amount { position: absolute; right: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: rgba(0,0,0,0.08); }
+      .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+      .dice { display: flex; gap: 12px; align-items: center; justify-content: center; font-size: 48px; margin: 16px 0 6px; }
       .die { display: inline-block; transition: transform 120ms ease; }
       .dice.rolling { animation: rollShake 600ms linear infinite; }
-      @keyframes rollShake {
-        0% { transform: translate(0,0) rotate(0deg); }
-        25% { transform: translate(2px,-2px) rotate(5deg); }
-        50% { transform: translate(-2px,1px) rotate(-4deg); }
-        75% { transform: translate(2px,2px) rotate(3deg); }
-        100% { transform: translate(0,0) rotate(0deg); }
-      }
-      .result { text-align: center; color: var(--muted); margin-bottom: 8px; }
-      .breakdown { background: #11192c; border: 1px solid #1f2a44; border-radius: 10px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; max-height: 160px; overflow: auto; }
-
-      .bad { color: var(--lose); }
-      .good { color: var(--win); }
-
-      @media (max-width: 720px) {
-        .table { grid-template-columns: repeat(2, 1fr); }
-      }
+      @keyframes rollShake { 0% { transform: translate(0,0) rotate(0deg);} 25% { transform: translate(2px,-2px) rotate(5deg);} 50% { transform: translate(-2px,1px) rotate(-4deg);} 75% { transform: translate(2px,2px) rotate(3deg);} 100% { transform: translate(0,0) rotate(0deg);} }
+      .result { text-align: center; opacity: 0.8; margin-bottom: 8px; }
+      .breakdown { border: 1px solid rgba(0,0,0,.12); border-radius: 10px; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; max-height: 180px; overflow: auto; }
+      .bad { color: #b00020; }
+      .good { color: #0f7b6c; }
+      @media (max-width: 720px) { .table { grid-template-columns: repeat(2, 1fr); } }
     </style>
   </head>
   <body>
