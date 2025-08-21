@@ -34,18 +34,25 @@
                 aspect-ratio: 1 / 1;
             }
             /* Internal grid lines only: top border for rows > 1, left border for cols > 1 */
-            .cell[data-row]:not([data-row="0"]) { border-top: 1px solid var(--line); }
-            .cell[data-col]:not([data-col="0"]) { border-left: 1px solid var(--line); }
+            .cell[data-row]:not([data-row="0"]) { border-top: 3px solid var(--line); }
+            .cell[data-col]:not([data-col="0"]) { border-left: 3px solid var(--line); }
             /* Remove separator between (2,0) and (3,0): remove left border of (row 0, col 3) */
             .cell[data-row="0"][data-col="3"] { border-left: none !important; }
 
-            .content { display: inline-flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-            .token { font-size: 20px; line-height: 1; color: var(--text); }
-            .token.red { color: var(--accent-red); font-weight: 700; }
-            .thai { font-size: 18px; }
+            .content {
+                display: flex;
+                width: 100%;
+                height: 100%;
+                align-items: center;
+                justify-content: center;
+                gap: 12px;
+            }
+            .token { font-size: 56px; line-height: 1; color: var(--text); }
+            .token.red { color: var(--accent-red); }
+            .thai { font-size: 52px; }
 
             /* Dice face (SVG) wrapper sizing */
-            .die { width: 90%; height: 90%; display: inline-block; }
+            .die { width: 90%; height: 90%; display: block; }
             .die svg { width: 100%; height: 100%; display: block; }
         </style>
         <script>
@@ -108,9 +115,13 @@
                 return `<span class="token">${token}</span>`;
             }
 
-            function renderCellLabel(label) {
+            function renderCellLabel(label, r, c) {
                 // Split labels by spaces, render each piece; 1 and 4 in red
                 // Example: "1 5" => ["1", "5"]
+                // Special-case: make the single-word cell (x=2,y=1) "ต่ำ" red
+                if (label.trim() === "ต่ำ" && r === 1 && c === 2) {
+                    return `<div class="content"><span class="token thai red">ต่ำ</span></div>`;
+                }
                 const parts = label.split(/\s+/).filter(Boolean);
                 const html = parts
                     .map((part) => {
@@ -141,7 +152,7 @@
                         cell.className = "cell";
                         cell.dataset.row = String(r);
                         cell.dataset.col = String(c);
-                        cell.innerHTML = renderCellLabel(label);
+                        cell.innerHTML = renderCellLabel(label, r, c);
                         cell.addEventListener("click", () => cellClick(r, c));
                         grid.appendChild(cell);
                     });
