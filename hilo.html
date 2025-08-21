@@ -60,11 +60,16 @@
             .cell.win { background: rgba(0,0,0,0.06); }
             .cell.lose { background: rgba(0,0,0,0.02); }
 
-            .controls { display: flex; align-items: center; gap: 12px; margin: 10px 0 14px; }
+            .controls { display: flex; align-items: center; gap: 12px; margin: 10px 0 14px; flex-wrap: wrap; }
             .controls button { padding: 8px 14px; border: 2px solid #000; background: #fff; cursor: pointer; }
             .controls button:disabled { opacity: 0.6; cursor: not-allowed; }
             .rolled { display: inline-flex; gap: 10px; align-items: center; min-height: 44px; }
             .status { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; opacity: 0.8; }
+            .balance { font-weight: 700; }
+            .chips { display: inline-flex; gap: 6px; }
+            .chip { padding: 6px 10px; border: 2px solid #000; background: #fff; cursor: pointer; }
+            .chip.active { background: #000; color: #fff; }
+            .amt { position: absolute; right: 6px; bottom: 6px; font-size: 14px; background: #000; color: #fff; padding: 2px 6px; }
         </style>
         <script src="hilo-logic.js" defer></script>
         <script src="hilo-ui.js" defer></script>
@@ -73,9 +78,14 @@
         <div class="wrap">
             <h2 style="margin: 0 0 12px 0; font-weight: 700;">ไฮโล (Hi Lo) – 6×4 Grid Prototype</h2>
             <div class="controls">
+                <span class="balance">Balance: $<span id="balance">1000</span></span>
+                <span>Chip:</span>
+                <span id="chips" class="chips"></span>
+                <button id="refundBtn">Clear Bets</button>
+                <button id="resetBtn">New Game</button>
                 <button id="rollBtn">Roll</button>
                 <div id="rolled" class="rolled" aria-live="polite"></div>
-                <div class="status" id="status">Select cells and roll.</div>
+                <div class="status" id="status">Add bets and roll.</div>
             </div>
             <div id="grid" class="grid" role="grid" aria-label="Hi Lo betting grid"></div>
             <p style="margin-top: 12px; font-size: 14px; color: #333;">

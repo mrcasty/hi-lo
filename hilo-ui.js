@@ -1,7 +1,7 @@
 // Hi-Lo UI: rendering and interactions
 (function () {
     if (!window.HiLo) return;
-    const { bets, roll, evaluateSelected } = window.HiLo;
+    const { bets, rules, roll, evaluateSelected, computeReturn } = window.HiLo;
 
     function createDieSVG(value, color = "#000") {
         const L = 6, C = 18, R = 30, T = 6, M = 18, B = 30;
@@ -67,21 +67,43 @@
         return `<div class="content">${html}</div>`;
     }
 
-    const selected = new Set(); // keys "r,c"
+    const betsMap = new Map(); // key -> amount
+    let balance = 1000;
+    let chip = 10;
 
     function keyOf(r, c) { return `${r},${c}`; }
     function getCell(r, c) { return document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`); }
-    function toggleSelection(r, c) {
+    function updateBalance() { document.getElementById('balance').textContent = String(Math.max(0, Math.floor(balance))); }
+    function placeBet(r, c) {
         const key = keyOf(r, c);
+        if (balance < chip) return; // insufficient
+        balance -= chip;
+        const cur = betsMap.get(key) || 0;
+        const next = cur + chip;
+        betsMap.set(key, next);
+        updateAmtBadge(r, c, next);
+        updateBalance();
+    }
+    function refundAll() {
+        let refund = 0;
+        betsMap.forEach((amt) => { refund += amt; });
+        betsMap.clear();
+        document.querySelectorAll('.amt').forEach(el => el.remove());
+        if (refund > 0) {
+            balance += refund;
+            updateBalance();
+        }
+    }
+    function updateAmtBadge(r, c, amt) {
         const cell = getCell(r, c);
         if (!cell) return;
-        if (selected.has(key)) {
-            selected.delete(key);
-            cell.classList.remove('selected');
-        } else {
-            selected.add(key);
-            cell.classList.add('selected');
+        let tag = cell.querySelector('.amt');
+        if (!tag) {
+            tag = document.createElement('span');
+            tag.className = 'amt';
+            cell.appendChild(tag);
         }
+        tag.textContent = `$${amt}`;
     }
 
     function bootstrap() {
@@ -93,7 +115,7 @@
                 cell.dataset.row = String(r);
                 cell.dataset.col = String(c);
                 cell.innerHTML = renderCellLabel(label, r, c);
-                cell.addEventListener("click", () => toggleSelection(r, c));
+                cell.addEventListener("click", () => placeBet(r, c));
                 grid.appendChild(cell);
             });
         });
@@ -101,6 +123,29 @@
         const rollBtn = document.getElementById('rollBtn');
         const rolled = document.getElementById('rolled');
         const status = document.getElementById('status');
+        const chipsEl = document.getElementById('chips');
+        const refundBtn = document.getElementById('refundBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        updateBalance();
+
+        function setupChips() {
+            const values = [1,5,10,25,50,100];
+            chipsEl.innerHTML = '';
+            values.forEach(v => {
+                const b = document.createElement('button');
+                b.className = 'chip' + (v === chip ? ' active' : '');
+                b.textContent = `$${v}`;
+                b.addEventListener('click', () => {
+                    chip = v;
+                    Array.from(chipsEl.children).forEach(el => el.classList.remove('active'));
+                    b.classList.add('active');
+                });
+                chipsEl.appendChild(b);
+            });
+        }
+        setupChips();
+        refundBtn.addEventListener('click', refundAll);
+        resetBtn.addEventListener('click', () => { refundAll(); balance = 1000; updateBalance(); rolled.innerHTML=''; status.textContent='Add bets and roll.'; });
 
         function renderRolled(d1, d2, d3) {
             const pip = (n) => createDieSVG(n, (n === 1 || n === 4) ? '#c21807' : '#000');
@@ -131,17 +176,26 @@
                 const dice = roll();
                 renderRolled(...dice);
                 clearWinLose();
-                const results = evaluateSelected(selected, dice);
-                let wins = 0, total = 0;
-                Object.entries(results).forEach(([key, win]) => {
-                    total++;
+                let returnsTotal = 0;
+                let totalBets = 0;
+                betsMap.forEach((amt, key) => {
+                    totalBets += amt;
                     const [r, c] = key.split(',').map((n) => parseInt(n, 10));
-                    const cell = getCell(r, c);
-                    if (!cell) return;
-                    cell.classList.add(win ? 'win' : 'lose');
-                    if (win) wins++;
+                    const rule = rules[r]?.[c];
+                    const ret = computeReturn(rule, dice, amt);
+                    if (ret > 0) {
+                        returnsTotal += ret;
+                        getCell(r, c)?.classList.add('win');
+                    } else {
+                        getCell(r, c)?.classList.add('lose');
+                    }
                 });
-                status.textContent = `Sum ${dice[0]+dice[1]+dice[2]} — Selected: ${total}, Wins: ${wins}`;
+                if (returnsTotal > 0) balance += returnsTotal;
+                updateBalance();
+                status.textContent = `Sum ${dice[0]+dice[1]+dice[2]} — Bets $${totalBets}, Returned $${returnsTotal}`;
+                // Clear all bets after resolution
+                betsMap.clear();
+                document.querySelectorAll('.amt').forEach(el => el.remove());
                 rollBtn.disabled = false;
             }, duration);
         }

@@ -102,5 +102,33 @@
         return results;
     }
 
-    global.HiLo = { bets, rules, sum, counts, isTriple, makePredicate, check, roll, isWinAt, evaluateSelected };
+    // Compute return (stake + winnings) for a given rule and dice. 0 if loss.
+    function computeReturn(rule, dice, stake) {
+        const [d1, d2, d3] = dice;
+        if (!makePredicate(rule)(d1, d2, d3)) return 0;
+        switch (rule.type) {
+            case 'sum': {
+                const s = sum(d1, d2, d3);
+                let odds = 0;
+                if (s === 5) odds = 30; else if (s === 6) odds = 18; else if (s === 11) odds = 6; else odds = 0;
+                return odds > 0 ? stake * (1 + odds) : 0;
+            }
+            case 'low':
+            case 'high':
+                return stake * 2; // 1:1 + stake
+            case 'single': {
+                const hit = counts(d1, d2, d3)[rule.num];
+                if (hit <= 0) return 0;
+                return stake * (1 + hit); // 1/2/3 : 1 + stake
+            }
+            case 'pair':
+                return stake * (1 + 5); // 5:1 + stake
+            case 'combo3':
+                return stake * (1 + 30); // 30:1 + stake
+            default:
+                return 0;
+        }
+    }
+
+    global.HiLo = { bets, rules, sum, counts, isTriple, makePredicate, check, roll, isWinAt, evaluateSelected, computeReturn };
 })(window);
