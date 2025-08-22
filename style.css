@@ -262,6 +262,7 @@ body {
     .rolled .die { width: 44px; height: 44px; }
     .balance { width: 180px; font-size: 18px; }
     .controls { gap: 8px; }
+    body { zoom: 0.5; -moz-transform: scale(2); -moz-transform-origin: 0 0; }
 }
 
 @media (max-width: 420px) {
