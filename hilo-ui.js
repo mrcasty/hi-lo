@@ -144,6 +144,7 @@
     }
 
     function bootstrap() {
+        document.body.style.zoom = "0.5"; // Apply zoom to body for scaling
         const grid = document.getElementById("grid");
         const bannerEl = document.querySelector('.banner');
         bets.forEach((row, r) => {
