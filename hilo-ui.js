@@ -104,7 +104,7 @@
             tag.className = 'amt';
             cell.appendChild(tag);
         }
-        tag.textContent = `$${amt}`;
+        tag.textContent = `฿${amt}`;
     }
 
     function bootstrap() {
@@ -126,7 +126,6 @@
         const status = document.getElementById('status');
         const chipsEl = document.getElementById('chips');
         const refundBtn = document.getElementById('refundBtn');
-        const resetBtn = document.getElementById('resetBtn');
         updateBalance();
 
         function setupChips() {
@@ -135,7 +134,7 @@
             values.forEach(v => {
                 const b = document.createElement('button');
                 b.className = 'chip' + (v === chip ? ' active' : '');
-                b.textContent = `$${v}`;
+                b.textContent = `฿${v}`;
                 b.addEventListener('click', () => {
                     chip = v;
                     Array.from(chipsEl.children).forEach(el => el.classList.remove('active'));
@@ -146,7 +145,6 @@
         }
         setupChips();
         refundBtn.addEventListener('click', refundAll);
-        resetBtn.addEventListener('click', () => { refundAll(); balance = 1000; updateBalance(); renderRolled(1,2,3); status.textContent='Add bets and roll.'; });
 
         function renderRolled(d1, d2, d3) {
             const pip = (n) => createDieSVG(n, (n === 1 || n === 4) ? '#c21807' : '#000', true);
@@ -193,7 +191,7 @@
                 });
                 if (returnsTotal > 0) balance += returnsTotal;
                 updateBalance();
-                status.textContent = `Sum ${dice[0]+dice[1]+dice[2]} — Bets $${totalBets}, Returned $${returnsTotal}`;
+                status.textContent = `Sum ${dice[0]+dice[1]+dice[2]} — Bets ฿${totalBets}, Returned ฿${returnsTotal}`;
                 // Clear all bets after resolution
                 betsMap.clear();
                 document.querySelectorAll('.amt').forEach(el => el.remove());

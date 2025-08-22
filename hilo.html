@@ -12,7 +12,12 @@
                 background: #fff;
                 color: var(--text);
                 font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Thai", sans-serif;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                -webkit-tap-highlight-color: transparent;
             }
+            .banner { width: 100%; }
+            .banner img { width: 100%; height: auto; display: block; }
             .wrap { max-width: 960px; margin: 20px auto; padding: 12px; }
             .grid {
                 display: grid;
@@ -62,7 +67,7 @@
             .cell.lose { background: rgba(0,0,0,0.02); }
 
             .controls { display: flex; align-items: center; gap: 12px; margin: 10px 0 14px; flex-wrap: wrap; }
-            .controls button { padding: 8px 14px; border: 2px solid #000; background: #fff; cursor: pointer; }
+            .controls button { padding: 10px 16px; border: 2px solid #000; background: #fff; cursor: pointer; min-height: 44px; }
             .controls button:disabled { opacity: 0.6; cursor: not-allowed; }
             .dicePanel {
                 display: flex;
@@ -86,23 +91,42 @@
                 font-size: 20px;
                 font-variant-numeric: tabular-nums;
             }
-            .chips { display: inline-flex; gap: 6px; }
-            .chip { padding: 6px 10px; border: 2px solid #000; background: #fff; cursor: pointer; }
+            .chips { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+            .chip { padding: 8px 12px; border: 2px solid #000; background: #fff; cursor: pointer; min-height: 44px; }
             .chip.active { background: #000; color: #fff; }
             .amt { position: absolute; right: 6px; bottom: 6px; font-size: 14px; background: #000; color: #fff; padding: 2px 6px; }
+
+            /* Mobile tweaks */
+            @media (max-width: 640px) {
+                .wrap { padding: 8px; margin: 10px auto; }
+                .token { font-size: 36px; }
+                .thai { font-size: 34px; }
+                .die { width: 72%; height: 72%; }
+                .rolled .die { width: 44px; height: 44px; }
+                .balance { width: 180px; font-size: 18px; }
+                .controls { gap: 8px; }
+            }
+            @media (max-width: 420px) {
+                .token { font-size: 28px; }
+                .thai { font-size: 26px; }
+                .die { width: 66%; height: 66%; }
+                .rolled .die { width: 40px; height: 40px; }
+                .balance { width: 160px; font-size: 16px; }
+            }
         </style>
         <script src="hilo-logic.js" defer></script>
         <script src="hilo-ui.js" defer></script>
     </head>
     <body>
+        <header class="banner">
+            <img src="banner.png" alt="Hi‑Lo" />
+        </header>
         <div class="wrap">
-            <h2 style="margin: 0 0 12px 0; font-weight: 700;">ไฮโล (Hi Lo) – 6×4 Grid Prototype</h2>
-            <div class="controls">
-                <span class="balance">Balance: $<span id="balance">1000</span></span>
+            <div class="controls" style="position: sticky; top: 0; background: #fff; z-index: 5; padding-top: 6px; padding-bottom: 6px;">
+                <span class="balance">Balance: ฿<span id="balance">1000</span></span>
                 <span>Chip:</span>
                 <span id="chips" class="chips"></span>
                 <button id="refundBtn">Clear Bets</button>
-                <button id="resetBtn">New Game</button>
                 <button id="rollBtn">Roll</button>
                 <div class="dicePanel">
                     <div id="rolled" class="rolled" aria-live="polite"></div>
