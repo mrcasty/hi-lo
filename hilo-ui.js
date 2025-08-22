@@ -136,6 +136,7 @@
 
     function bootstrap() {
         const grid = document.getElementById("grid");
+        const bannerEl = document.querySelector('.banner');
         bets.forEach((row, r) => {
             row.forEach((label, c) => {
                 const cell = document.createElement("div");
@@ -148,7 +149,6 @@
             });
         });
 
-        const rollBtn = document.getElementById('rollBtn');
         const rolled = document.getElementById('rolled');
         const status = document.getElementById('status');
         const chipsEl = document.getElementById('chips');
@@ -165,7 +165,8 @@
             values.forEach(v => {
                 const b = document.createElement('button');
                 b.className = 'chip' + (v === chip ? ' active' : '');
-                b.textContent = `฿${v}`;
+                b.dataset.val = String(v);
+                b.dataset.label = `฿${v}`;
                 b.addEventListener('click', () => {
                     chip = v;
                     Array.from(chipsEl.children).forEach(el => el.classList.remove('active'));
@@ -218,8 +219,10 @@
             });
         }
 
+        let rolling = false;
         function doRoll() {
-            rollBtn.disabled = true;
+            if (rolling) return;
+            rolling = true;
             status.textContent = 'Rolling...';
             // simple animation
             const anim = setInterval(() => {
@@ -256,17 +259,44 @@
                 // Clear all bets after resolution
                 betsMap.clear();
                 document.querySelectorAll('.amt').forEach(el => el.remove());
-                rollBtn.disabled = false;
+                rolling = false;
                 saveState();
             }, duration);
         }
 
         // show dice initially
         renderRolled(1,2,3);
-        rollBtn.addEventListener('click', doRoll);
+        rolled.addEventListener('click', doRoll);
         updateBalance();
         updateReloads();
         saveState();
+
+        // Adjust bottom spacing based on bet panel height to avoid scrollbars when not needed
+        const panel = document.querySelector('.bottomControls');
+        function setPanelHeightVar() {
+            if (!panel) return;
+            const h = panel.offsetHeight || 0;
+            document.documentElement.style.setProperty('--panel-h', h + 'px');
+        }
+        setPanelHeightVar();
+        window.addEventListener('resize', setPanelHeightVar);
+        // Recompute after chips render/changes
+        setTimeout(setPanelHeightVar, 0);
+
+        // Toggle banner underlay only when side gaps exist (w/h > image AR)
+        function adjustBannerUnderlay() {
+            if (!bannerEl) return;
+            const rect = bannerEl.getBoundingClientRect();
+            const boxAR = rect.width / rect.height;
+            const imgAR = 1280 / 524; // banner.png aspect ratio
+            if (boxAR > imgAR + 0.01) bannerEl.classList.add('wide');
+            else bannerEl.classList.remove('wide');
+        }
+        adjustBannerUnderlay();
+        window.addEventListener('resize', adjustBannerUnderlay);
+        // Also run after image load
+        const bannerImg = bannerEl ? bannerEl.querySelector('img') : null;
+        if (bannerImg) bannerImg.addEventListener('load', adjustBannerUnderlay, { once: true });
     }
 
     document.addEventListener("DOMContentLoaded", bootstrap);
