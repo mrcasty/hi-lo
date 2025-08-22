@@ -271,3 +271,25 @@ body {
     .rolled .die { width: 40px; height: 40px; }
     .balance { width: 160px; font-size: 16px; }
 }
+
+/* Prevent text inflation surprises */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* Phone breakpoint */
+@media (max-width: 640px) {
+  /* Universal fallback (works on Android Chrome) */
+  #app {
+    transform: scale(0.5);        /* visual 50% */
+    transform-origin: top left;
+    width: 200%;                  /* compensate so content still fills */
+  }
+
+  /* Prefer zoom where supported (Windows Chrome, some Androids) */
+  @supports (zoom: 0.5) {
+    #app {
+      zoom: 0.5;                  /* layout-scale, crisp */
+      transform: none;            /* no double scaling */
+      width: auto;                /* no compensation needed */
+    }
+  }
+}
