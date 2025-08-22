@@ -15,9 +15,22 @@
                 -webkit-font-smoothing: antialiased;
                 -moz-osx-font-smoothing: grayscale;
                 -webkit-tap-highlight-color: transparent;
+                /* leave room for fixed bet panel at bottom */
+                padding-bottom: 120px;
             }
-            .banner { width: 100%; }
-            .banner img { width: 100%; height: auto; display: block; }
+            .banner { position: relative; width: 100%; height: min(400px, 35vh); max-height: 400px; overflow: hidden; }
+            .banner::before {
+                content: "";
+                position: absolute; inset: 0;
+                background: url('banner.png') center / 100% 100% no-repeat;
+                image-rendering: pixelated; /* extend edge pixels when stretched */
+            }
+            .banner img {
+                position: absolute; inset: 0;
+                width: 100%; height: 100%;
+                object-fit: contain; /* show whole image, keep aspect */
+                display: block;
+            }
             .wrap { max-width: 960px; margin: 20px auto; padding: 12px; }
             .grid {
                 display: grid;
@@ -95,6 +108,23 @@
             .chip { padding: 8px 12px; border: 2px solid #000; background: #fff; cursor: pointer; min-height: 44px; }
             .chip.active { background: #000; color: #fff; }
             .amt { position: absolute; right: 6px; bottom: 6px; font-size: 14px; background: #000; color: #fff; padding: 2px 6px; }
+            .bottomControls {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                background: #D0532A; /* orange */
+                z-index: 10;
+                padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                border-top: 2px solid #000;
+            }
+            .bottomControls .chips { justify-content: center; }
+            #refundBtn.clearBtn { padding: 12px 20px; font-size: 18px; border-width: 3px; }
 
             /* Mobile tweaks */
             @media (max-width: 640px) {
@@ -117,16 +147,15 @@
         <script src="hilo-logic.js" defer></script>
         <script src="hilo-ui.js" defer></script>
     </head>
-    <body>
+        <body>
         <header class="banner">
-            <img src="banner.png" alt="Hi‑Lo" />
+            <img src="banner.png" alt="Hi-Lo" />
         </header>
         <div class="wrap">
             <div class="controls" style="position: sticky; top: 0; background: #fff; z-index: 5; padding-top: 6px; padding-bottom: 6px;">
                 <span class="balance">Balance: ฿<span id="balance">1000</span></span>
-                <span>Chip:</span>
-                <span id="chips" class="chips"></span>
-                <button id="refundBtn">Clear Bets</button>
+                <span>Reloads: <strong id="reloads">0</strong></span>
+                <button id="redeemBtn">Redeem ฿1000</button>
                 <button id="rollBtn">Roll</button>
                 <div class="dicePanel">
                     <div id="rolled" class="rolled" aria-live="polite"></div>
@@ -134,10 +163,10 @@
                 </div>
             </div>
             <div id="grid" class="grid" role="grid" aria-label="Hi Lo betting grid"></div>
-            <p style="margin-top: 12px; font-size: 14px; color: #333;">
-                Notes: internal lines only (no outer border). Click any cell to log its coordinates.
-                Dice faces for _1–_6 use red pips for 1 and 4.
-            </p>
+        </div>
+        <div class="bottomControls">
+            <span id="chips" class="chips"></span>
+            <button id="refundBtn" class="clearBtn">Clear Bets</button>
         </div>
     </body>
     </html>

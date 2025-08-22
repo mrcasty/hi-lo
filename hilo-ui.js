@@ -70,11 +70,38 @@
 
     const betsMap = new Map(); // key -> amount
     let balance = 1000;
+    let reloads = 0;
     let chip = 10;
+
+    const STORAGE_KEYS = {
+        balance: 'hilo.balance',
+        reloads: 'hilo.reloads',
+        chip: 'hilo.chip',
+    };
+
+    function loadState() {
+        try {
+            const b = localStorage.getItem(STORAGE_KEYS.balance);
+            const r = localStorage.getItem(STORAGE_KEYS.reloads);
+            const c = localStorage.getItem(STORAGE_KEYS.chip);
+            if (b !== null) balance = Number(b) || balance;
+            if (r !== null) reloads = Number(r) || reloads;
+            if (c !== null) chip = Number(c) || chip;
+        } catch (_) {}
+    }
+
+    function saveState() {
+        try {
+            localStorage.setItem(STORAGE_KEYS.balance, String(Math.floor(balance)));
+            localStorage.setItem(STORAGE_KEYS.reloads, String(Math.floor(reloads)));
+            localStorage.setItem(STORAGE_KEYS.chip, String(Math.floor(chip)));
+        } catch (_) {}
+    }
 
     function keyOf(r, c) { return `${r},${c}`; }
     function getCell(r, c) { return document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`); }
     function updateBalance() { document.getElementById('balance').textContent = String(Math.max(0, Math.floor(balance))); }
+    function updateReloads() { const el = document.getElementById('reloads'); if (el) el.textContent = String(Math.max(0, Math.floor(reloads))); }
     function placeBet(r, c) {
         const key = keyOf(r, c);
         if (balance < chip) return; // insufficient
@@ -126,6 +153,10 @@
         const status = document.getElementById('status');
         const chipsEl = document.getElementById('chips');
         const refundBtn = document.getElementById('refundBtn');
+        const redeemBtn = document.getElementById('redeemBtn');
+
+        // Load persisted state (local-only)
+        loadState();
         updateBalance();
 
         function setupChips() {
@@ -139,12 +170,42 @@
                     chip = v;
                     Array.from(chipsEl.children).forEach(el => el.classList.remove('active'));
                     b.classList.add('active');
+                    saveState();
                 });
                 chipsEl.appendChild(b);
             });
         }
         setupChips();
-        refundBtn.addEventListener('click', refundAll);
+        refundBtn.addEventListener('click', () => { refundAll(); saveState(); });
+
+        // Simple redeem system (word-only, no suffix)
+        // Rule: When reloads = r, the only valid code is WORDS[r]. On success:
+        // balance += 1000; reloads += 1. After the last word, no more codes are valid.
+        const WORDS = ['ELEPHANT','MANGO','LOTUS','SIAM','TUKTUK','COCONUT','TEMPLE','CURRY','DURIAN','COBRA'];
+        function expectedCode() {
+            if (reloads >= WORDS.length) return null; // no more codes
+            return WORDS[reloads];
+        }
+        function redeem() {
+            const input = (window.prompt('Enter redeem code for ฿1000') || '').trim().toUpperCase();
+            if (!input) return;
+            const code = expectedCode();
+            if (code === null) {
+                status.textContent = 'No more redeem codes available.';
+                return;
+            }
+            if (input === code) {
+                balance += 1000;
+                reloads += 1;
+                updateBalance();
+                updateReloads();
+                saveState();
+                status.textContent = `Redeemed ฿1000 (reload ${reloads}).`;
+            } else {
+                status.textContent = 'Invalid code.';
+            }
+        }
+        redeemBtn.addEventListener('click', redeem);
 
         function renderRolled(d1, d2, d3) {
             const pip = (n) => createDieSVG(n, (n === 1 || n === 4) ? '#c21807' : '#000', true);
@@ -196,12 +257,16 @@
                 betsMap.clear();
                 document.querySelectorAll('.amt').forEach(el => el.remove());
                 rollBtn.disabled = false;
+                saveState();
             }, duration);
         }
 
         // show dice initially
         renderRolled(1,2,3);
         rollBtn.addEventListener('click', doRoll);
+        updateBalance();
+        updateReloads();
+        saveState();
     }
 
     document.addEventListener("DOMContentLoaded", bootstrap);
