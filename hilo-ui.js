@@ -84,9 +84,18 @@
             const b = localStorage.getItem(STORAGE_KEYS.balance);
             const r = localStorage.getItem(STORAGE_KEYS.reloads);
             const c = localStorage.getItem(STORAGE_KEYS.chip);
-            if (b !== null) balance = Number(b) || balance;
-            if (r !== null) reloads = Number(r) || reloads;
-            if (c !== null) chip = Number(c) || chip;
+            if (b !== null) {
+                const n = Number(b);
+                if (!Number.isNaN(n)) balance = n;
+            }
+            if (r !== null) {
+                const n = Number(r);
+                if (!Number.isNaN(n)) reloads = n;
+            }
+            if (c !== null) {
+                const n = Number(c);
+                if (!Number.isNaN(n)) chip = n;
+            }
         } catch (_) {}
     }
 
