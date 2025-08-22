@@ -51,12 +51,14 @@
                 justify-content: center;
             }
             .bannerOverlay button { padding: 8px 12px; border: 2px solid #000; background: #fff; cursor: pointer; }
-            .wrap { max-width: 960px; margin: 20px auto; padding: 12px; }
+            .container { max-width: 960px; margin: 20px auto; padding: 12px; }
+            .diceSection {}
+            .tableSection {}
             .grid {
                 display: grid;
-                grid-template-columns: repeat(6, 1fr);
+                width: 100%;
+                grid-template-columns: repeat(6, calc((100% - (5 * var(--linew))) / 6));
                 /* rows auto-size; cells enforce squares via aspect-ratio */
-                grid-auto-rows: 1fr;
                 gap: 0; /* internal lines drawn via borders */
                 user-select: none;
             }
@@ -198,13 +200,15 @@
                 <button id="redeemBtn">Redeem ฿1000</button>
             </div>
         </header>
-        <div class="wrap">
+        <div class="container diceSection">
             <div class="controls">
                 <div class="dicePanel">
                     <div id="rolled" class="rolled" aria-live="polite"></div>
                     <div class="status" id="status">Ready.</div>
                 </div>
             </div>
+        </div>
+        <div class="container tableSection">
             <div class="tablePanel">
                 <div id="grid" class="grid" role="grid" aria-label="Hi Lo betting grid"></div>
             </div>
